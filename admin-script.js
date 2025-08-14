@@ -3,7 +3,7 @@
 // ==============================
 const ADMIN_CREDENTIALS = {
     username: 'admin',
-    password: 'q1w2e3r4t5@'
+    password: 'delicias2024'
 };
 
 // ==============================
