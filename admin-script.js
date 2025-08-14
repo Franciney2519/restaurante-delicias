@@ -22,44 +22,81 @@ const btnLogout = document.getElementById('btnLogout');
 
 // Verificar se já está logado
 function checkAuthStatus() {
+    console.log('🔐 Verificando status de autenticação...');
+    
     const authToken = localStorage.getItem('adminAuthToken');
+    console.log('Token encontrado:', authToken);
+    
     if (authToken) {
-        const authData = JSON.parse(authToken);
-        if (authData.username && authData.timestamp) {
-            // Verificar se o token não expirou (24 horas)
-            const now = Date.now();
-            const tokenAge = now - authData.timestamp;
-            const maxAge = 24 * 60 * 60 * 1000; // 24 horas
+        try {
+            const authData = JSON.parse(authToken);
+            console.log('Dados de autenticação:', authData);
             
-            if (tokenAge < maxAge) {
-                isAuthenticated = true;
-                currentUser = authData.username;
-                showAdminPanel();
-                return;
+            if (authData.username && authData.timestamp) {
+                // Verificar se o token não expirou (24 horas)
+                const now = Date.now();
+                const tokenAge = now - authData.timestamp;
+                const maxAge = 24 * 60 * 60 * 1000; // 24 horas
+                
+                console.log('Idade do token:', tokenAge, 'ms');
+                console.log('Token válido por:', maxAge, 'ms');
+                
+                if (tokenAge < maxAge) {
+                    console.log('✅ Token válido, mostrando painel admin');
+                    isAuthenticated = true;
+                    currentUser = authData.username;
+                    showAdminPanel();
+                    return;
+                } else {
+                    console.log('⏰ Token expirado, removendo...');
+                    localStorage.removeItem('adminAuthToken');
+                }
             }
+        } catch (error) {
+            console.error('❌ Erro ao processar token:', error);
+            localStorage.removeItem('adminAuthToken');
         }
     }
     
     // Se não estiver autenticado, mostrar tela de login
+    console.log('🔒 Mostrando tela de login');
     showLoginScreen();
 }
 
 // Mostrar tela de login
 function showLoginScreen() {
-    loginScreen.style.display = 'flex';
-    adminPanel.style.display = 'none';
-    isAuthenticated = false;
-    currentUser = '';
+    console.log('🔒 Mostrando tela de login');
+    console.log('Elemento loginScreen:', loginScreen);
+    console.log('Elemento adminPanel:', adminPanel);
+    
+    if (loginScreen && adminPanel) {
+        loginScreen.style.display = 'flex';
+        adminPanel.style.display = 'none';
+        isAuthenticated = false;
+        currentUser = '';
+        console.log('✅ Tela de login exibida');
+    } else {
+        console.error('❌ Elementos DOM não encontrados');
+    }
 }
 
 // Mostrar painel administrativo
 function showAdminPanel() {
-    loginScreen.style.display = 'none';
-    adminPanel.style.display = 'block';
-    currentUserSpan.textContent = `Bem-vindo, ${currentUser}!`;
+    console.log('🖥️ Mostrando painel administrativo');
+    console.log('Elemento loginScreen:', loginScreen);
+    console.log('Elemento adminPanel:', adminPanel);
     
-    // Inicializar o painel
-    initializeAdminPanel();
+    if (loginScreen && adminPanel) {
+        loginScreen.style.display = 'none';
+        adminPanel.style.display = 'block';
+        currentUserSpan.textContent = `Bem-vindo, ${currentUser}!`;
+        
+        // Inicializar o painel
+        initializeAdminPanel();
+        console.log('✅ Painel admin exibido');
+    } else {
+        console.error('❌ Elementos DOM não encontrados');
+    }
 }
 
 // Autenticar usuário
@@ -91,7 +128,7 @@ function logout() {
 
 // Inicializar painel administrativo
 function initializeAdminPanel() {
-    loadMenuData();
+    menuManager.loadMenuData();
     renderDashboard();
     renderCategoryTabs();
     renderMenuTable();
@@ -608,5 +645,18 @@ window.deleteItem = deleteItem;
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM carregado, verificando elementos...');
+    console.log('loginScreen:', document.getElementById('loginScreen'));
+    console.log('adminPanel:', document.getElementById('adminPanel'));
+    console.log('loginForm:', document.getElementById('loginForm'));
+    console.log('usernameInput:', document.getElementById('username'));
+    console.log('passwordInput:', document.getElementById('password'));
+    console.log('currentUserSpan:', document.getElementById('currentUser'));
+    console.log('btnLogout:', document.getElementById('btnLogout'));
+    
+    // Limpar localStorage para debug
+    console.log('🧹 Limpando localStorage para debug...');
+    localStorage.removeItem('adminAuthToken');
+    
     checkAuthStatus();
 });
