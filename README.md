@@ -42,6 +42,10 @@ Agora você tem um painel administrativo completo para gerenciar o cardápio sem
 - Clique no botão "Admin" no menu de navegação
 - Ou acesse diretamente: `admin.html`
 
+#### **Credenciais de Acesso**:
+- **Usuário**: `admin`
+- **Senha**: `delicias2024`
+
 #### **Funcionalidades**:
 - ✅ **Adicionar/Editar/Excluir** itens do menu
 - ✅ **Criar novas categorias** de pratos
