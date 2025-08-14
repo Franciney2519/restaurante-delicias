@@ -75,6 +75,17 @@ function showLoginScreen() {
         isAuthenticated = false;
         currentUser = '';
         console.log('✅ Tela de login exibida');
+        console.log('loginScreen.display:', loginScreen.style.display);
+        console.log('adminPanel.display:', adminPanel.style.display);
+        
+        // Verificar se a tela está realmente visível
+        setTimeout(() => {
+            const isLoginVisible = loginScreen.style.display === 'flex';
+            const isAdminHidden = adminPanel.style.display === 'none';
+            console.log('Verificação de visibilidade:');
+            console.log('Login visível?', isLoginVisible);
+            console.log('Admin oculto?', isAdminHidden);
+        }, 100);
     } else {
         console.error('❌ Elementos DOM não encontrados');
     }
@@ -101,7 +112,16 @@ function showAdminPanel() {
 
 // Autenticar usuário
 function authenticateUser(username, password) {
+    console.log('🔐 Tentativa de autenticação...');
+    console.log('Usuário digitado:', username);
+    console.log('Senha digitada:', password);
+    console.log('Usuário esperado:', ADMIN_CREDENTIALS.username);
+    console.log('Senha esperada:', ADMIN_CREDENTIALS.password);
+    console.log('Usuário correto?', username === ADMIN_CREDENTIALS.username);
+    console.log('Senha correta?', password === ADMIN_CREDENTIALS.password);
+    
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        console.log('✅ Autenticação bem-sucedida!');
         isAuthenticated = true;
         currentUser = username;
         
@@ -111,11 +131,14 @@ function authenticateUser(username, password) {
             timestamp: Date.now()
         };
         localStorage.setItem('adminAuthToken', JSON.stringify(authToken));
+        console.log('💾 Token salvo no localStorage');
         
         showAdminPanel();
         return true;
+    } else {
+        console.log('❌ Autenticação falhou!');
+        return false;
     }
-    return false;
 }
 
 // Fazer logout
@@ -540,14 +563,24 @@ function hideAllModals() {
 function setupEventListeners() {
     // Login form
     loginForm.addEventListener('submit', function(e) {
+        console.log('📝 Formulário de login submetido');
         e.preventDefault();
+        
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
         
+        console.log('Valores do formulário:');
+        console.log('Username (trimmed):', username);
+        console.log('Password (trimmed):', password);
+        console.log('Username length:', username.length);
+        console.log('Password length:', password.length);
+        
         if (authenticateUser(username, password)) {
+            console.log('🎉 Login bem-sucedido, limpando campos');
             usernameInput.value = '';
             passwordInput.value = '';
         } else {
+            console.log('💥 Login falhou, mostrando alerta');
             alert('Usuário ou senha incorretos!');
         }
     });
@@ -646,17 +679,36 @@ window.deleteItem = deleteItem;
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM carregado, verificando elementos...');
-    console.log('loginScreen:', document.getElementById('loginScreen'));
-    console.log('adminPanel:', document.getElementById('adminPanel'));
-    console.log('loginForm:', document.getElementById('loginForm'));
-    console.log('usernameInput:', document.getElementById('username'));
-    console.log('passwordInput:', document.getElementById('password'));
-    console.log('currentUserSpan:', document.getElementById('currentUser'));
-    console.log('btnLogout:', document.getElementById('btnLogout'));
+    
+    // Verificar se todos os elementos necessários estão presentes
+    const elements = {
+        loginScreen: document.getElementById('loginScreen'),
+        adminPanel: document.getElementById('adminPanel'),
+        loginForm: document.getElementById('loginForm'),
+        usernameInput: document.getElementById('username'),
+        passwordInput: document.getElementById('password'),
+        currentUserSpan: document.getElementById('currentUser'),
+        btnLogout: document.getElementById('btnLogout')
+    };
+    
+    console.log('Elementos encontrados:', elements);
+    
+    // Verificar se algum elemento está faltando
+    const missingElements = Object.entries(elements).filter(([name, element]) => !element);
+    if (missingElements.length > 0) {
+        console.error('❌ Elementos faltando:', missingElements.map(([name]) => name));
+        alert('Erro: Alguns elementos da página não foram encontrados. Verifique o console.');
+        return;
+    }
+    
+    console.log('✅ Todos os elementos foram encontrados');
     
     // Limpar localStorage para debug
     console.log('🧹 Limpando localStorage para debug...');
     localStorage.removeItem('adminAuthToken');
+    
+    // Verificar se as credenciais estão definidas
+    console.log('🔑 Credenciais configuradas:', ADMIN_CREDENTIALS);
     
     checkAuthStatus();
 });
