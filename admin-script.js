@@ -1,7 +1,7 @@
 // Configurações de Login
 const ADMIN_CREDENTIALS = {
     username: 'admin',
-    password: 'delicias2024'
+    password: 'q1w2e3r4t5@'
 };
 
 // Estado da aplicação
