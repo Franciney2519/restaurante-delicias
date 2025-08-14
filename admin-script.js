@@ -1,46 +1,49 @@
+// ==============================
 // Configurações de Login
+// ==============================
 const ADMIN_CREDENTIALS = {
     username: 'admin',
     password: 'q1w2e3r4t5@'
 };
 
+// ==============================
 // Estado da aplicação
+// ==============================
 let isAuthenticated = false;
 let currentUser = '';
 let menuData = {};
 let currentCategory = 'todos';
 let editingItemId = null;
 
-// Elementos DOM
-const loginScreen = document.getElementById('loginScreen');
-const adminPanel = document.getElementById('adminPanel');
-const loginForm = document.getElementById('loginForm');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const currentUserSpan = document.getElementById('currentUser');
-const btnLogout = document.getElementById('btnLogout');
+// ==============================
+// Elementos DOM (preenchidos no DOMContentLoaded)
+// ==============================
+let loginScreen, adminPanel, loginForm, usernameInput, passwordInput, currentUserSpan, btnLogout;
+
+// ==============================
+// Autenticação & Fluxo de Tela
+// ==============================
 
 // Verificar se já está logado
 function checkAuthStatus() {
     console.log('🔐 Verificando status de autenticação...');
-    
     const authToken = localStorage.getItem('adminAuthToken');
     console.log('Token encontrado:', authToken);
-    
+
     if (authToken) {
         try {
             const authData = JSON.parse(authToken);
             console.log('Dados de autenticação:', authData);
-            
+
             if (authData.username && authData.timestamp) {
                 // Verificar se o token não expirou (24 horas)
                 const now = Date.now();
                 const tokenAge = now - authData.timestamp;
                 const maxAge = 24 * 60 * 60 * 1000; // 24 horas
-                
+
                 console.log('Idade do token:', tokenAge, 'ms');
                 console.log('Token válido por:', maxAge, 'ms');
-                
+
                 if (tokenAge < maxAge) {
                     console.log('✅ Token válido, mostrando painel admin');
                     isAuthenticated = true;
@@ -57,7 +60,7 @@ function checkAuthStatus() {
             localStorage.removeItem('adminAuthToken');
         }
     }
-    
+
     // Se não estiver autenticado, mostrar tela de login
     console.log('🔒 Mostrando tela de login');
     showLoginScreen();
@@ -68,7 +71,7 @@ function showLoginScreen() {
     console.log('🔒 Mostrando tela de login');
     console.log('Elemento loginScreen:', loginScreen);
     console.log('Elemento adminPanel:', adminPanel);
-    
+
     if (loginScreen && adminPanel) {
         loginScreen.style.display = 'flex';
         adminPanel.style.display = 'none';
@@ -77,8 +80,8 @@ function showLoginScreen() {
         console.log('✅ Tela de login exibida');
         console.log('loginScreen.display:', loginScreen.style.display);
         console.log('adminPanel.display:', adminPanel.style.display);
-        
-        // Verificar se a tela está realmente visível
+
+        // Verificação rápida de visibilidade
         setTimeout(() => {
             const isLoginVisible = loginScreen.style.display === 'flex';
             const isAdminHidden = adminPanel.style.display === 'none';
@@ -96,12 +99,12 @@ function showAdminPanel() {
     console.log('🖥️ Mostrando painel administrativo');
     console.log('Elemento loginScreen:', loginScreen);
     console.log('Elemento adminPanel:', adminPanel);
-    
+
     if (loginScreen && adminPanel) {
         loginScreen.style.display = 'none';
         adminPanel.style.display = 'block';
         currentUserSpan.textContent = `Bem-vindo, ${currentUser}!`;
-        
+
         // Inicializar o painel
         initializeAdminPanel();
         console.log('✅ Painel admin exibido');
@@ -119,12 +122,12 @@ function authenticateUser(username, password) {
     console.log('Senha esperada:', ADMIN_CREDENTIALS.password);
     console.log('Usuário correto?', username === ADMIN_CREDENTIALS.username);
     console.log('Senha correta?', password === ADMIN_CREDENTIALS.password);
-    
+
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
         console.log('✅ Autenticação bem-sucedida!');
         isAuthenticated = true;
         currentUser = username;
-        
+
         // Salvar token de autenticação
         const authToken = {
             username: username,
@@ -132,7 +135,7 @@ function authenticateUser(username, password) {
         };
         localStorage.setItem('adminAuthToken', JSON.stringify(authToken));
         console.log('💾 Token salvo no localStorage');
-        
+
         showAdminPanel();
         return true;
     } else {
@@ -149,16 +152,20 @@ function logout() {
     showLoginScreen();
 }
 
-// Inicializar painel administrativo
+// ==============================
+// Inicialização do Painel
+// ==============================
 function initializeAdminPanel() {
     menuManager.loadMenuData();
     renderDashboard();
     renderCategoryTabs();
     renderMenuTable();
-    setupEventListeners();
+    setupAdminListeners(); // ouvintes do painel somente após o admin estar visível
 }
 
+// ==============================
 // Gerenciador de Menu
+// ==============================
 class MenuManager {
     constructor() {
         this.menuData = {};
@@ -308,14 +315,14 @@ class MenuManager {
 
     updateItem(itemId, itemData) {
         let itemFound = false;
-        
+
         Object.keys(this.menuData).forEach(category => {
             const itemIndex = this.menuData[category].findIndex(item => item.id === itemId);
             if (itemIndex !== -1) {
                 // Se a categoria mudou, remover da categoria antiga
                 if (this.menuData[category][itemIndex].category !== itemData.category) {
                     this.menuData[category].splice(itemIndex, 1);
-                    
+
                     // Adicionar na nova categoria
                     if (!this.menuData[itemData.category]) {
                         this.menuData[itemData.category] = [];
@@ -343,7 +350,7 @@ class MenuManager {
 
     deleteItem(itemId) {
         let itemFound = false;
-        
+
         Object.keys(this.menuData).forEach(category => {
             const itemIndex = this.menuData[category].findIndex(item => item.id === itemId);
             if (itemIndex !== -1) {
@@ -404,7 +411,9 @@ class MenuManager {
 // Instanciar gerenciador de menu
 const menuManager = new MenuManager();
 
-// Funções de renderização
+// ==============================
+// Renderização (Dashboard / Tabelas / Abas)
+// ==============================
 function renderDashboard() {
     document.getElementById('totalItems').textContent = menuManager.getTotalItems();
     document.getElementById('totalCategories').textContent = menuManager.getTotalCategories();
@@ -439,7 +448,7 @@ function renderMenuTable() {
     tableBody.innerHTML = '';
 
     let itemsToShow = [];
-    
+
     if (currentCategory === 'todos') {
         Object.values(menuData).forEach(category => {
             itemsToShow = itemsToShow.concat(category);
@@ -455,7 +464,7 @@ function renderMenuTable() {
             <td class="menu-item-name">${item.name}</td>
             <td class="menu-item-description">${item.description}</td>
             <td class="menu-item-price">R$ ${item.price.toFixed(2)}</td>
-            <td class="menu-item-category">${item.category}</td>
+            <td class="menu-item-category">${item.category.charAt(0).toUpperCase() + item.category.slice(1).replace('-', ' ')}</td>
             <td class="menu-item-actions">
                 <button class="btn-edit" onclick="editItem('${item.id}')">
                     <i class="fas fa-edit"></i> Editar
@@ -475,12 +484,14 @@ function setActiveCategory(category) {
     renderMenuTable();
 }
 
-// Funções de gerenciamento
+// ==============================
+// Gerenciamento de Itens & Categorias
+// ==============================
 function addItem() {
     editingItemId = null;
     document.getElementById('modalTitle').textContent = 'Adicionar Item';
     document.getElementById('itemForm').reset();
-    
+
     // Preencher opções de categoria
     const categorySelect = document.getElementById('itemCategory');
     categorySelect.innerHTML = '';
@@ -490,29 +501,29 @@ function addItem() {
         option.textContent = category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ');
         categorySelect.appendChild(option);
     });
-    
+
     showModal('itemModal');
 }
 
 function editItem(itemId) {
     editingItemId = itemId;
-    
+
     // Encontrar o item
     let item = null;
     Object.values(menuData).forEach(category => {
         const found = category.find(i => i.id === itemId);
         if (found) item = found;
     });
-    
+
     if (!item) return;
-    
+
     // Preencher o formulário
     document.getElementById('modalTitle').textContent = 'Editar Item';
     document.getElementById('itemName').value = item.name;
     document.getElementById('itemDescription').value = item.description;
     document.getElementById('itemPrice').value = item.price;
     document.getElementById('itemIcon').value = item.icon;
-    
+
     // Preencher opções de categoria
     const categorySelect = document.getElementById('itemCategory');
     categorySelect.innerHTML = '';
@@ -523,18 +534,21 @@ function editItem(itemId) {
         if (category === item.category) option.selected = true;
         categorySelect.appendChild(option);
     });
-    
+
     showModal('itemModal');
 }
 
 function deleteItem(itemId) {
+    // ✅ Garantir que o confirmar delete saiba quem excluir
+    editingItemId = itemId;
+
     // Encontrar o nome do item
     let itemName = '';
     Object.values(menuData).forEach(category => {
         const found = category.find(i => i.id === itemId);
         if (found) itemName = found.name;
     });
-    
+
     document.getElementById('deleteItemName').textContent = itemName;
     showModal('deleteModal');
 }
@@ -544,7 +558,9 @@ function addCategory() {
     showModal('categoryModal');
 }
 
-// Funções de modal
+// ==============================
+// Modais
+// ==============================
 function showModal(modalId) {
     document.getElementById(modalId).classList.add('show');
 }
@@ -559,22 +575,21 @@ function hideAllModals() {
     });
 }
 
-// Event Listeners
-function setupEventListeners() {
-    // Login form
+// ==============================
+// Listeners
+// ==============================
+
+// Somente do LOGIN (existem mesmo quando não autenticado)
+function setupLoginListeners() {
     loginForm.addEventListener('submit', function(e) {
         console.log('📝 Formulário de login submetido');
         e.preventDefault();
-        
+
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
-        
-        console.log('Valores do formulário:');
-        console.log('Username (trimmed):', username);
-        console.log('Password (trimmed):', password);
-        console.log('Username length:', username.length);
-        console.log('Password length:', password.length);
-        
+
+        console.log('Valores do formulário:', { username, password, ulen: username.length, plen: password.length });
+
         if (authenticateUser(username, password)) {
             console.log('🎉 Login bem-sucedido, limpando campos');
             usernameInput.value = '';
@@ -584,20 +599,32 @@ function setupEventListeners() {
             alert('Usuário ou senha incorretos!');
         }
     });
+}
 
-    // Logout button
+// Somente do PAINEL ADMIN (são registrados após login)
+function setupAdminListeners() {
+    // Evita múltiplos listeners se o painel for reinicializado
+    btnLogout.replaceWith(btnLogout.cloneNode(true));
+    btnLogout = document.getElementById('btnLogout');
+
     btnLogout.addEventListener('click', logout);
 
     // Add item button
+    const addItemBtn = document.getElementById('addItemBtn');
+    addItemBtn.replaceWith(addItemBtn.cloneNode(true));
     document.getElementById('addItemBtn').addEventListener('click', addItem);
 
     // Add category button
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    addCategoryBtn.replaceWith(addCategoryBtn.cloneNode(true));
     document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
 
     // Item form
+    const itemForm = document.getElementById('itemForm');
+    itemForm.replaceWith(itemForm.cloneNode(true));
     document.getElementById('itemForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(e.target);
         const itemData = {
             name: formData.get('name'),
@@ -620,9 +647,11 @@ function setupEventListeners() {
     });
 
     // Category form
+    const categoryForm = document.getElementById('categoryForm');
+    categoryForm.replaceWith(categoryForm.cloneNode(true));
     document.getElementById('categoryForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(e.target);
         const categoryData = {
             name: formData.get('name'),
@@ -641,6 +670,8 @@ function setupEventListeners() {
     });
 
     // Delete confirmation
+    const confirmDelete = document.getElementById('confirmDelete');
+    confirmDelete.replaceWith(confirmDelete.cloneNode(true));
     document.getElementById('confirmDelete').addEventListener('click', function() {
         if (editingItemId) {
             menuManager.deleteItem(editingItemId);
@@ -653,16 +684,36 @@ function setupEventListeners() {
     });
 
     // Modal close buttons
+    const closeItemModal = document.getElementById('closeItemModal');
+    closeItemModal.replaceWith(closeItemModal.cloneNode(true));
     document.getElementById('closeItemModal').addEventListener('click', () => hideModal('itemModal'));
+
+    const closeCategoryModal = document.getElementById('closeCategoryModal');
+    closeCategoryModal.replaceWith(closeCategoryModal.cloneNode(true));
     document.getElementById('closeCategoryModal').addEventListener('click', () => hideModal('categoryModal'));
+
+    const closeDeleteModal = document.getElementById('closeDeleteModal');
+    closeDeleteModal.replaceWith(closeDeleteModal.cloneNode(true));
     document.getElementById('closeDeleteModal').addEventListener('click', () => hideModal('deleteModal'));
 
     // Cancel buttons
+    const cancelItem = document.getElementById('cancelItem');
+    cancelItem.replaceWith(cancelItem.cloneNode(true));
     document.getElementById('cancelItem').addEventListener('click', () => hideModal('itemModal'));
+
+    const cancelCategory = document.getElementById('cancelCategory');
+    cancelCategory.replaceWith(cancelCategory.cloneNode(true));
     document.getElementById('cancelCategory').addEventListener('click', () => hideModal('categoryModal'));
+
+    const cancelDelete = document.getElementById('cancelDelete');
+    cancelDelete.replaceWith(cancelDelete.cloneNode(true));
     document.getElementById('cancelDelete').addEventListener('click', () => hideModal('deleteModal'));
 
     // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        // Garante que não criamos múltiplos handlers
+        modal.replaceWith(modal.cloneNode(true));
+    });
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -672,43 +723,48 @@ function setupEventListeners() {
     });
 }
 
+// ==============================
 // Funções globais para onclick
+// ==============================
 window.editItem = editItem;
 window.deleteItem = deleteItem;
 
+// ==============================
 // Inicialização
+// ==============================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM carregado, verificando elementos...');
-    
-    // Verificar se todos os elementos necessários estão presentes
-    const elements = {
-        loginScreen: document.getElementById('loginScreen'),
-        adminPanel: document.getElementById('adminPanel'),
-        loginForm: document.getElementById('loginForm'),
-        usernameInput: document.getElementById('username'),
-        passwordInput: document.getElementById('password'),
-        currentUserSpan: document.getElementById('currentUser'),
-        btnLogout: document.getElementById('btnLogout')
-    };
-    
+
+    // Mapear elementos
+    loginScreen = document.getElementById('loginScreen');
+    adminPanel = document.getElementById('adminPanel');
+    loginForm = document.getElementById('loginForm');
+    usernameInput = document.getElementById('username');
+    passwordInput = document.getElementById('password');
+    currentUserSpan = document.getElementById('currentUser');
+    btnLogout = document.getElementById('btnLogout');
+
+    const elements = { loginScreen, adminPanel, loginForm, usernameInput, passwordInput, currentUserSpan, btnLogout };
     console.log('Elementos encontrados:', elements);
-    
+
     // Verificar se algum elemento está faltando
-    const missingElements = Object.entries(elements).filter(([name, element]) => !element);
+    const missingElements = Object.entries(elements).filter(([_, element]) => !element);
     if (missingElements.length > 0) {
         console.error('❌ Elementos faltando:', missingElements.map(([name]) => name));
         alert('Erro: Alguns elementos da página não foram encontrados. Verifique o console.');
         return;
     }
-    
+
     console.log('✅ Todos os elementos foram encontrados');
-    
-    // Limpar localStorage para debug
-    console.log('🧹 Limpando localStorage para debug...');
-    localStorage.removeItem('adminAuthToken');
-    
-    // Verificar se as credenciais estão definidas
+
+    // ⚠️ NÃO limpe o token em produção; manter apenas em debug, se necessário.
+    // localStorage.removeItem('adminAuthToken');
+
     console.log('🔑 Credenciais configuradas:', ADMIN_CREDENTIALS);
-    
+
+    // 1) Ouvintes do LOGIN (precisam existir mesmo sem autenticação)
+    setupLoginListeners();
+
+    // 2) Verificar status atual e seguir o fluxo
     checkAuthStatus();
 });
